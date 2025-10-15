@@ -5,6 +5,34 @@ All notable changes to Deep Eye will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-10-15
+
+### Fixed
+- **PDF Report Generation on Windows**
+  - Replaced WeasyPrint with ReportLab for Windows compatibility
+  - WeasyPrint requires GTK libraries which are problematic on Windows
+  - ReportLab provides native Windows support with no external dependencies
+  - Added automatic fallback to HTML if PDF generation fails
+  - Improved error handling and user feedback
+  - Updated requirements.txt (WeasyPrint now optional/commented)
+
+### Changed
+- **Report Generator Improvements**
+  - Enhanced PDF layout with professional styling
+  - Added color-coded severity indicators in PDF reports
+  - Improved table formatting for better readability
+  - Added comprehensive metadata section
+  - Better vulnerability detail presentation
+
+- **OSINT Refactoring**
+  - Moved OSINT gathering from vulnerability scanner to reconnaissance phase
+  - OSINT intelligence is now collected during reconnaissance (--recon flag)
+  - Integrated EnhancedOSINT module into ReconEngine
+  - OSINT data is now available in scan context for all modules
+  - Updated configuration: removed 'osint_gathering' from vulnerability_scanner checks
+  - Added 'osint_gathering' to reconnaissance enabled_modules
+  - Cleaner separation of concerns: recon gathers intelligence, scanner tests vulnerabilities
+
 ## [1.2.0] - 2025-10-15
 
 ### Added

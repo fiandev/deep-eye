@@ -137,7 +137,36 @@ deep-eye/
 
 For detailed structure, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
-## 🛡️ Legal Disclaimer
+## � Troubleshooting
+
+### PDF Report Generation
+
+**Issue**: PDF generation errors on Windows (WeasyPrint library issues)
+
+**Solution**: The tool now uses ReportLab (Windows-friendly) for PDF generation by default. If you encounter any issues:
+
+1. Ensure ReportLab is installed:
+```bash
+pip install reportlab>=4.0.0
+```
+
+2. If PDF generation fails, the tool will automatically fall back to HTML format.
+
+3. For advanced HTML-to-PDF conversion (optional), you can install additional tools, but it's not required.
+
+### Common Issues
+
+**AI Provider Connection Errors**
+- Verify your API keys in `config/config.yaml`
+- Check your internet connection
+- Ensure API key has sufficient credits
+
+**Scanning Errors**
+- Verify target URL is accessible
+- Check if target has rate limiting or WAF
+- Try reducing thread count with `-t` option
+
+## �🛡️ Legal Disclaimer
 
 **IMPORTANT**: Deep Eye is designed for authorized security testing only.
 

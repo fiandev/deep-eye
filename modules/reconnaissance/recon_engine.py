@@ -8,6 +8,7 @@ import dns.resolver
 from typing import Dict, List
 from urllib.parse import urlparse
 from utils.logger import get_logger
+from modules.reconnaissance.osint_enhanced import EnhancedOSINT
 
 logger = get_logger(__name__)
 
@@ -21,6 +22,9 @@ class ReconEngine:
         self.http_client = http_client
         self.recon_config = config.get('reconnaissance', {})
         self.enabled_modules = self.recon_config.get('enabled_modules', [])
+        
+        # Initialize OSINT module
+        self.osint_enhanced = EnhancedOSINT(http_client, config)
     
     def run(self, target_url: str) -> Dict:
         """
@@ -56,6 +60,12 @@ class ReconEngine:
         # Subdomain enumeration
         if 'subdomain_enumeration' in self.enabled_modules:
             results['subdomains'] = self._enumerate_subdomains(results['domain'])
+        
+        # OSINT gathering (integrated from osint_enhanced module)
+        osint_config = self.config.get('osint', {})
+        if osint_config.get('enabled', False):
+            logger.info(f"Running OSINT intelligence gathering on {results['domain']}")
+            results['osint'] = self.osint_enhanced.gather_intelligence(results['domain'])
         
         return results
     

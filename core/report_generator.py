@@ -73,21 +73,141 @@ class ReportGenerator:
         logger.info(f"HTML report generated: {output_path}")
     
     def _generate_pdf(self, results: Dict, output_path: str):
-        """Generate PDF report."""
-        # First generate HTML
-        html_path = output_path.replace('.pdf', '.html')
-        self._generate_html(results, html_path)
-        
-        # Convert HTML to PDF (using weasyprint)
+        """Generate PDF report using ReportLab (Windows-friendly)."""
         try:
-            from weasyprint import HTML
-            HTML(html_path).write_pdf(output_path)
+            from reportlab.lib.pagesizes import letter, A4
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.units import inch
+            from reportlab.lib import colors
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+            from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+            
+            # Create PDF document
+            doc = SimpleDocTemplate(output_path, pagesize=letter)
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Custom styles
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                textColor=colors.HexColor('#667eea'),
+                spaceAfter=30,
+                alignment=TA_CENTER
+            )
+            
+            heading_style = ParagraphStyle(
+                'CustomHeading',
+                parent=styles['Heading2'],
+                fontSize=16,
+                textColor=colors.HexColor('#667eea'),
+                spaceAfter=12,
+                spaceBefore=12
+            )
+            
+            # Title
+            story.append(Paragraph("🔍 Deep Eye Security Assessment Report", title_style))
+            story.append(Spacer(1, 0.2*inch))
+            
+            # Metadata table
+            metadata = [
+                ['Target:', results.get('target', 'N/A')],
+                ['Generated:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+                ['Scan Duration:', str(results.get('duration', 'N/A'))],
+                ['URLs Scanned:', str(results.get('urls_crawled', 0))]
+            ]
+            
+            metadata_table = Table(metadata, colWidths=[2*inch, 4*inch])
+            metadata_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey)
+            ]))
+            story.append(metadata_table)
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Severity Summary
+            severity_counts = results.get('severity_summary', {})
+            severity_data = [
+                ['Severity', 'Count'],
+                ['Critical', str(severity_counts.get('critical', 0))],
+                ['High', str(severity_counts.get('high', 0))],
+                ['Medium', str(severity_counts.get('medium', 0))],
+                ['Low', str(severity_counts.get('low', 0))]
+            ]
+            
+            severity_table = Table(severity_data, colWidths=[3*inch, 3*inch])
+            severity_colors = {
+                1: colors.HexColor('#8B0000'),  # Critical
+                2: colors.HexColor('#FF4500'),  # High
+                3: colors.HexColor('#FFA500'),  # Medium
+                4: colors.HexColor('#FFD700')   # Low
+            }
+            
+            severity_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ] + [
+                ('BACKGROUND', (0, i), (0, i), severity_colors[i])
+                for i in severity_colors.keys()
+            ]))
+            story.append(severity_table)
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Executive Summary
+            story.append(Paragraph("Executive Summary", heading_style))
+            summary_text = self._generate_summary(results)
+            story.append(Paragraph(summary_text.replace('\n', '<br/>'), styles['BodyText']))
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Vulnerabilities
+            story.append(Paragraph("Vulnerabilities", heading_style))
+            vulnerabilities = self._sort_vulnerabilities(results.get('vulnerabilities', []))
+            
+            if vulnerabilities:
+                for vuln in vulnerabilities:
+                    # Vulnerability title
+                    vuln_title = f"<b>{vuln.get('type', 'Unknown')}</b> - {vuln.get('severity', 'info').upper()}"
+                    story.append(Paragraph(vuln_title, styles['Heading3']))
+                    
+                    # Vulnerability details
+                    vuln_details = f"""
+                    <b>URL:</b> {vuln.get('url', 'N/A')}<br/>
+                    <b>Parameter:</b> {vuln.get('parameter', 'N/A')}<br/>
+                    <b>Description:</b> {vuln.get('description', 'N/A')}<br/>
+                    <b>Evidence:</b> {vuln.get('evidence', 'N/A')}<br/>
+                    <b>Remediation:</b> {vuln.get('remediation', 'N/A')}
+                    """
+                    story.append(Paragraph(vuln_details, styles['BodyText']))
+                    story.append(Spacer(1, 0.2*inch))
+            else:
+                story.append(Paragraph("No vulnerabilities detected.", styles['BodyText']))
+            
+            # Build PDF
+            doc.build(story)
             logger.info(f"PDF report generated: {output_path}")
             
-            # Clean up temporary HTML
-            Path(html_path).unlink()
+        except ImportError as e:
+            logger.error(f"ReportLab not available: {e}")
+            logger.info("Falling back to HTML report...")
+            html_path = output_path.replace('.pdf', '.html')
+            self._generate_html(results, html_path)
+            logger.info(f"HTML report available at: {html_path}")
         except Exception as e:
             logger.error(f"Error generating PDF: {e}")
+            logger.info("Falling back to HTML report...")
+            html_path = output_path.replace('.pdf', '.html')
+            self._generate_html(results, html_path)
             logger.info(f"HTML report available at: {html_path}")
     
     def _generate_summary(self, results: Dict) -> str:

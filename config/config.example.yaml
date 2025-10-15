@@ -81,6 +81,8 @@ vulnerability_scanner:
     - file_upload
     # v1.2.0 advanced modules
     - websocket
+    - anomaly_detector
+    # Note: osint_gathering has been moved to reconnaissance phase
   
   # Payload generation
   payload_generation:
@@ -208,6 +210,7 @@ reconnaissance:
     - port_scanning
     - directory_bruteforce
     - email_harvesting
+    - osint_gathering  # OSINT is now part of reconnaissance
   
   subdomain_sources:
     - crt.sh

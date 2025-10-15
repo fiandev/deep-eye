@@ -27,7 +27,7 @@ shodan>=1.30.0
 reportlab>=4.0.0
 jinja2>=3.1.0
 markdown>=3.5.0
-weasyprint>=60.0
+# weasyprint>=60.0  # Optional: Requires GTK libraries on Windows, use ReportLab instead
 
 # Data Processing
 pyyaml>=6.0

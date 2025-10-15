@@ -155,7 +155,7 @@ class ScannerEngine:
         console.print(f"[green]✓[/green] Crawling complete. Found {len(all_urls)} URLs\n")
         return all_urls
     
-    def scan_url(self, url: str) -> List[Dict]:
+    def scan_url(self, url: str, recon_data: Optional[Dict] = None) -> List[Dict]:
         """Scan a single URL for vulnerabilities."""
         vulnerabilities = []
         
@@ -170,6 +170,10 @@ class ScannerEngine:
                 'response': response,
                 'headers': dict(response.headers)
             }
+            
+            # Add OSINT data to context if available from reconnaissance
+            if recon_data and 'osint' in recon_data:
+                context['osint_data'] = recon_data['osint']
             
             # Generate intelligent payloads
             payloads = self.ai_payload_generator.generate_payloads(context)
@@ -188,7 +192,7 @@ class ScannerEngine:
         
         return vulnerabilities
     
-    def scan_all_urls(self, urls: Set[str]):
+    def scan_all_urls(self, urls: Set[str], recon_data: Optional[Dict] = None):
         """Scan all discovered URLs for vulnerabilities."""
         console.print("[bold blue]🔍 Starting vulnerability scanning...[/bold blue]")
         
@@ -208,7 +212,7 @@ class ScannerEngine:
             
             with ThreadPoolExecutor(max_workers=self.threads) as executor:
                 future_to_url = {
-                    executor.submit(self.scan_url, url): url
+                    executor.submit(self.scan_url, url, recon_data): url
                     for url in urls
                 }
                 
@@ -269,8 +273,10 @@ class ScannerEngine:
         }
         
         # Phase 1: Reconnaissance (optional)
+        recon_data = None
         if enable_recon:
-            results['reconnaissance'] = self.run_reconnaissance()
+            recon_data = self.run_reconnaissance()
+            results['reconnaissance'] = recon_data
         
         # Phase 2: Web Crawling
         discovered_urls = self.crawl_recursive()
@@ -280,9 +286,9 @@ class ScannerEngine:
         # Phase 3: Vulnerability Scanning
         if quick_scan:
             # Scan only main URL in quick mode
-            self.scan_all_urls({self.target_url})
+            self.scan_all_urls({self.target_url}, recon_data)
         else:
-            self.scan_all_urls(discovered_urls)
+            self.scan_all_urls(discovered_urls, recon_data)
         
         # Compile results
         results['vulnerabilities'] = self.vulnerabilities
