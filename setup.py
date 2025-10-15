@@ -28,7 +28,7 @@ setup(
     description="Advanced AI-Driven Penetration Testing Tool",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/deep-eye",
+    url="https://github.com/zakirkun/deep-eye",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -54,8 +54,8 @@ setup(
     include_package_data=True,
     keywords="security penetration-testing vulnerability-scanner ai pentesting",
     project_urls={
-        "Bug Reports": "https://github.com/yourusername/deep-eye/issues",
-        "Source": "https://github.com/yourusername/deep-eye",
-        "Documentation": "https://github.com/yourusername/deep-eye/wiki",
+        "Bug Reports": "https://github.com/zakirkun/deep-eye/issues",
+        "Source": "https://github.com/zakirkun/deep-eye",
+        "Documentation": "https://github.com/zakirkun/deep-eye/wiki",
     },
 )

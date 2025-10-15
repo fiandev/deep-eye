@@ -151,5 +151,5 @@ scanner:
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/yourusername/deep-eye/issues
+- GitHub Issues: https://github.com/zakirkun/deep-eye/issues
 - Documentation: See README.md

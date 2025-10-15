@@ -71,7 +71,7 @@ chmod +x scripts/install.sh
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/deep-eye.git
+git clone https://github.com/zakirkun/deep-eye.git
 cd deep-eye
 ```
 

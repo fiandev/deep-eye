@@ -13,7 +13,7 @@ Thank you for your interest in contributing to Deep Eye! This document provides 
 
 ### 1. Fork the Repository
 ```bash
-git clone https://github.com/yourusername/deep-eye.git
+git clone https://github.com/zakirkun/deep-eye.git
 cd deep-eye
 ```
 
