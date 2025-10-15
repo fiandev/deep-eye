@@ -1,0 +1,178 @@
+# Deep Eye 🔍
+
+An advanced AI-driven vulnerability scanner and penetration testing tool that integrates multiple AI providers (OpenAI, Grok, OLLAMA, Claude) with comprehensive security testing modules for automated bug hunting, intelligent payload generation, and professional reporting.
+
+![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Status](https://img.shields.io/badge/status-active-success)
+
+## 🚀 Features
+
+### Core Capabilities
+- **Multi-AI Provider Support**: Dynamic switching between OpenAI, Grok, OLLAMA, and Claude
+- **Intelligent Payload Generation**: AI-powered, CVE-aware, context-sensitive payloads
+- **Comprehensive Scanning**: 30+ attack methods with framework-specific tests
+- **Advanced Reconnaissance**: Passive OSINT, DNS enumeration, subdomain discovery
+- **Professional Reporting**: PDF/HTML/JSON reports with executive summaries
+- **Collaborative Scanning**: Team-based distributed scanning with session management
+
+### Vulnerability Detection
+- SQL Injection (Error-based, Blind, Time-based)
+- Cross-Site Scripting (XSS)
+- Command Injection
+- SSRF (Server-Side Request Forgery)
+- XXE (XML External Entity)
+- Path Traversal
+- CSRF (Cross-Site Request Forgery)
+
+#### v1.1.0 Advanced Modules
+- **API Security Testing** (OWASP API Top 10 2023)
+- **GraphQL Security** (Introspection, Depth limits, Batch attacks)
+- **Business Logic Flaws** (Price manipulation, Workflow bypass, Race conditions)
+- **Authentication Testing** (Session management, JWT, OAuth, MFA bypass)
+- **File Upload Vulnerabilities** (Unrestricted upload, Path traversal, Type bypass)
+- **Collaborative Scanning** (Team-based distributed scanning)
+
+#### v1.2.0 Advanced Modules
+- **WebSocket Testing** (Origin validation, Auth, Injection, DoS protection)
+- **ML-Based Anomaly Detection** (Behavioral analysis, Pattern recognition)
+- **Interactive HTML Reports** (Charts, Filtering, Real-time search)
+- **Enhanced OSINT** (Google dorking, Breach databases, CT logs, GitHub/Pastebin)
+- **Advanced Payload Obfuscation** (11+ techniques for WAF bypass)
+
+And 17+ more attack vectors
+
+## 📋 Prerequisites
+
+- Python 3.8 or higher
+- pip package manager
+- API keys for AI providers (at least one):
+  - OpenAI API Key
+  - Anthropic (Claude) API Key
+  - Grok API Key
+  - OLLAMA (local installation)
+
+## 🔧 Installation
+
+### Quick Install (Recommended)
+
+**Windows:**
+```powershell
+.\scripts\install.ps1
+```
+
+**Linux/Mac:**
+```bash
+chmod +x scripts/install.sh
+./scripts/install.sh
+```
+
+### Manual Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/deep-eye.git
+cd deep-eye
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Configure AI providers:
+```bash
+cp config/config.example.yaml config/config.yaml
+# Edit config.yaml with your API keys
+```
+
+## 🎯 Usage
+
+### Basic Scan
+```bash
+python deep_eye.py -u https://example.com
+```
+
+### Advanced Scan with AI Provider
+```bash
+python deep_eye.py -u https://example.com --ai-provider openai --depth 3 --threads 10
+```
+
+### Full Reconnaissance + Scan
+```bash
+python deep_eye.py -u https://example.com --recon --full-scan --output report.pdf
+```
+
+### Command Line Options
+```
+-u, --url              Target URL to scan
+-d, --depth            Crawl depth (default: 2)
+-t, --threads          Number of threads (default: 5)
+--ai-provider          AI provider (openai/claude/grok/ollama)
+--recon                Enable reconnaissance mode
+--full-scan            Enable all vulnerability tests
+-o, --output           Output report file
+--format               Report format (pdf/html/json)
+--proxy                Proxy URL
+--headers              Custom headers (JSON format)
+```
+
+## 📁 Project Structure
+
+```
+deep-eye/
+├── core/                      # Core scanning engine
+├── ai_providers/              # AI provider integrations
+├── modules/                   # Security testing modules
+├── utils/                     # Utility functions
+├── config/                    # Configuration files
+├── templates/                 # Report templates
+├── examples/                  # Usage examples
+├── scripts/                   # Installation scripts
+├── docs/                      # Documentation
+├── deep_eye.py               # Main entry point
+├── setup.py                  # Package setup
+└── requirements.txt          # Dependencies
+```
+
+For detailed structure, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
+## 🛡️ Legal Disclaimer
+
+**IMPORTANT**: Deep Eye is designed for authorized security testing only.
+
+- Only use on systems you own or have explicit permission to test
+- Unauthorized access to computer systems is illegal
+- Users are responsible for complying with all applicable laws
+- The developers assume no liability for misuse
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## � Documentation
+
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Get started quickly
+- **[Architecture](docs/ARCHITECTURE.md)** - System design and structure
+- **[Testing Guide](docs/TESTING_GUIDE.md)** - Testing procedures
+- **[Contributing](docs/CONTRIBUTING.md)** - How to contribute
+- **[Changelog](docs/CHANGELOG.md)** - Version history
+
+## �🙏 Acknowledgments
+
+- OpenAI for GPT models
+- Anthropic for Claude
+- OWASP for security testing methodologies
+- The security research community
+
+## 📧 Contact
+
+For questions or support, please open an issue on GitHub.
+
+---
+
+**⚠️ Use Responsibly | 🔒 Test Ethically | 💡 Learn Continuously**
