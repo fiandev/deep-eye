@@ -131,6 +131,56 @@ class ReportGenerator:
             story.append(metadata_table)
             story.append(Spacer(1, 0.3*inch))
             
+            # Reconnaissance & OSINT Data
+            recon_data = results.get('reconnaissance', {})
+            if recon_data:
+                story.append(Paragraph("Reconnaissance & OSINT Intelligence", heading_style))
+                
+                # DNS Information
+                dns_info = recon_data.get('dns', {})
+                if dns_info:
+                    story.append(Paragraph("<b>DNS Records:</b>", styles['Heading4']))
+                    dns_records = []
+                    for record_type, records in dns_info.items():
+                        if records:
+                            dns_records.append([record_type.upper(), ', '.join(str(r) for r in records[:3])])
+                    if dns_records:
+                        dns_table = Table([[heading, data] for heading, data in dns_records], colWidths=[1.5*inch, 4.5*inch])
+                        dns_table.setStyle(TableStyle([
+                            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 9),
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                        ]))
+                        story.append(dns_table)
+                        story.append(Spacer(1, 0.15*inch))
+                
+                # OSINT Data
+                osint_data = recon_data.get('osint', {})
+                if osint_data:
+                    story.append(Paragraph("<b>OSINT Findings:</b>", styles['Heading4']))
+                    
+                    # Emails
+                    emails = osint_data.get('emails', [])
+                    if emails:
+                        story.append(Paragraph(f"Emails found: {len(emails)}", styles['BodyText']))
+                        story.append(Paragraph(', '.join(emails[:5]), styles['BodyText']))
+                        story.append(Spacer(1, 0.1*inch))
+                    
+                    # Subdomains
+                    subdomains = osint_data.get('subdomains', [])
+                    if subdomains:
+                        story.append(Paragraph(f"Subdomains discovered: {len(subdomains)}", styles['BodyText']))
+                        story.append(Paragraph(', '.join(subdomains[:10]), styles['BodyText']))
+                        story.append(Spacer(1, 0.1*inch))
+                    
+                    # Technologies
+                    technologies = recon_data.get('technologies', [])
+                    if technologies:
+                        story.append(Paragraph(f"Technologies detected: {', '.join(technologies)}", styles['BodyText']))
+                        story.append(Spacer(1, 0.1*inch))
+                
+                story.append(PageBreak())
+            
             # Severity Summary
             severity_counts = results.get('severity_summary', {})
             severity_data = [
@@ -384,6 +434,27 @@ class ReportGenerator:
             margin: 10px 0;
         }
         
+        .recon-subsection {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+        
+        .recon-subsection h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .recon-data {
+            margin-top: 10px;
+        }
+        
+        .recon-data p {
+            margin: 8px 0;
+        }
+        
         .footer {
             text-align: center;
             padding: 20px;
@@ -432,6 +503,60 @@ class ReportGenerator:
                 <p>Low</p>
             </div>
         </div>
+        
+        {% if reconnaissance %}
+        <div class="section">
+            <h2>🔎 Reconnaissance & OSINT Intelligence</h2>
+            
+            {% if reconnaissance.dns %}
+            <div class="recon-subsection">
+                <h3>DNS Records</h3>
+                <div class="recon-data">
+                    {% for record_type, records in reconnaissance.dns.items() %}
+                        {% if records %}
+                        <p><strong>{{ record_type|upper }}:</strong> {{ records|join(', ') }}</p>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if reconnaissance.osint %}
+            <div class="recon-subsection">
+                <h3>OSINT Findings</h3>
+                <div class="recon-data">
+                    {% if reconnaissance.osint.emails %}
+                    <p><strong>Emails Found:</strong> {{ reconnaissance.osint.emails|length }}</p>
+                    <div class="code">{{ reconnaissance.osint.emails|join(', ') }}</div>
+                    {% endif %}
+                    
+                    {% if reconnaissance.osint.subdomains %}
+                    <p><strong>Subdomains Discovered:</strong> {{ reconnaissance.osint.subdomains|length }}</p>
+                    <div class="code">{{ reconnaissance.osint.subdomains[:10]|join(', ') }}</div>
+                    {% endif %}
+                    
+                    {% if reconnaissance.osint.github_leaks %}
+                    <p><strong>GitHub Potential Leaks:</strong> {{ reconnaissance.osint.github_leaks|length }}</p>
+                    {% endif %}
+                    
+                    {% if reconnaissance.osint.breaches %}
+                    <p><strong>Breach Database Results:</strong></p>
+                    <div class="code">{{ reconnaissance.osint.breaches|join(', ') }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if reconnaissance.technologies %}
+            <div class="recon-subsection">
+                <h3>Technologies Detected</h3>
+                <div class="recon-data">
+                    <p>{{ reconnaissance.technologies|join(', ') }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
         
         <div class="section">
             <h2>Executive Summary</h2>

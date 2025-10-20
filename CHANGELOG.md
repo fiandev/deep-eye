@@ -5,6 +5,58 @@ All notable changes to Deep Eye will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-10-20
+
+### Added
+
+#### New Features
+- **Custom Plugin System** - Extensible architecture for custom vulnerability scanners
+  - Plugin base class for easy development
+  - Hot-reload plugin loading from `plugins/` directory
+  - Example plugin included for demonstration
+  - Plugin enable/disable via configuration
+  - Automatic plugin discovery and initialization
+  
+- **Multi-Channel Notification System** - Real-time alerts for scan completion and critical findings
+  - **Email Notifications** - SMTP-based email alerts with HTML formatting
+  - **Slack Integration** - Webhook-based Slack notifications with rich formatting
+  - **Discord Integration** - Discord webhook notifications with embed support
+  - Immediate alerts for critical vulnerabilities
+  - Configurable notification triggers
+  - Detailed scan summary in notifications
+  
+- **Enhanced Reporting with OSINT Data** - Comprehensive reconnaissance data in reports
+  - DNS records displayed in PDF and HTML reports
+  - OSINT findings integration (emails, subdomains, technologies)
+  - GitHub leak detection in reports
+  - Breach database results
+  - Social media footprint
+  - Beautiful formatting with dedicated sections
+
+#### New Vulnerability Scanners
+- **15 New Vulnerability Scanners** - Expanded from 30+ to 45+ attack methods
+  - **Local File Inclusion (LFI)** - Detects file inclusion vulnerabilities for reading local files
+  - **Remote File Inclusion (RFI)** - Identifies remote file inclusion leading to potential RCE
+  - **Server-Side Template Injection (SSTI)** - Tests for template injection vulnerabilities
+  - **CRLF Injection** - Checks for header manipulation and response splitting
+  - **Host Header Injection** - Detects cache poisoning and SSRF via Host header
+  - **LDAP Injection** - Tests for LDAP query manipulation vulnerabilities
+  - **XML Injection** - Identifies XML structure manipulation issues
+  - **Insecure Deserialization** - Detects unsafe deserialization patterns (Java, Python, PHP)
+  - **Authentication Bypass** - Tests various authentication bypass techniques
+  - **Information Disclosure** - Scans for exposed sensitive information (passwords, API keys, secrets)
+  - **Sensitive Data Exposure** - Detects PII exposure (SSN, credit cards, emails, phone numbers)
+  - **JWT Vulnerabilities** - Checks for JWT "none" algorithm and weak signing algorithms
+  - **Broken Authentication** - Tests session management security (Secure/HttpOnly flags, weak session IDs)
+  - **API Vulnerabilities** (alias) - Backward compatibility for api_security
+  - **GraphQL Vulnerabilities** (alias) - Backward compatibility for graphql_security
+
+### Changed
+- Updated vulnerability scanner from 30+ to 45+ attack methods
+- Enhanced scanner engine with comprehensive coverage of OWASP Top 10 and beyond
+- All new scanners include detailed evidence collection and remediation guidance
+- Improved error handling and logging for all scanner modules
+
 ## [1.2.1] - 2025-10-15
 
 ### Fixed

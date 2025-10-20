@@ -1,8 +1,11 @@
+<center>
+<img src="./assets/Screenshot 2025-10-20 150312.png" height="400">
+</center>
+
 # Deep Eye 🔍
 
 An advanced AI-driven vulnerability scanner and penetration testing tool that integrates multiple AI providers (OpenAI, Grok, OLLAMA, Claude) with comprehensive security testing modules for automated bug hunting, intelligent payload generation, and professional reporting.
 
-![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-active-success)
 
@@ -11,12 +14,16 @@ An advanced AI-driven vulnerability scanner and penetration testing tool that in
 ### Core Capabilities
 - **Multi-AI Provider Support**: Dynamic switching between OpenAI, Grok, OLLAMA, and Claude
 - **Intelligent Payload Generation**: AI-powered, CVE-aware, context-sensitive payloads
-- **Comprehensive Scanning**: 30+ attack methods with framework-specific tests
+- **Comprehensive Scanning**: 45+ attack methods with framework-specific tests
 - **Advanced Reconnaissance**: Passive OSINT, DNS enumeration, subdomain discovery
-- **Professional Reporting**: PDF/HTML/JSON reports with executive summaries
+- **Professional Reporting**: PDF/HTML/JSON reports with OSINT intelligence and executive summaries
 - **Collaborative Scanning**: Team-based distributed scanning with session management
+- **Custom Plugin System**: Extend Deep Eye with your own vulnerability scanners
+- **Multi-Channel Notifications**: Real-time alerts via Email, Slack, and Discord
 
 ### Vulnerability Detection
+
+#### Core Vulnerabilities
 - SQL Injection (Error-based, Blind, Time-based)
 - Cross-Site Scripting (XSS)
 - Command Injection
@@ -24,6 +31,24 @@ An advanced AI-driven vulnerability scanner and penetration testing tool that in
 - XXE (XML External Entity)
 - Path Traversal
 - CSRF (Cross-Site Request Forgery)
+- Open Redirect
+- CORS Misconfiguration
+- Security Headers Analysis
+
+#### v1.3.0 Additional Vulnerabilities
+- Local File Inclusion (LFI)
+- Remote File Inclusion (RFI)
+- Server-Side Template Injection (SSTI)
+- CRLF Injection
+- Host Header Injection
+- LDAP Injection
+- XML Injection
+- Insecure Deserialization
+- Authentication Bypass
+- Information Disclosure
+- Sensitive Data Exposure
+- JWT Vulnerabilities
+- Broken Authentication
 
 #### v1.1.0 Advanced Modules
 - **API Security Testing** (OWASP API Top 10 2023)
@@ -39,6 +64,11 @@ An advanced AI-driven vulnerability scanner and penetration testing tool that in
 - **Interactive HTML Reports** (Charts, Filtering, Real-time search)
 - **Enhanced OSINT** (Google dorking, Breach databases, CT logs, GitHub/Pastebin)
 - **Advanced Payload Obfuscation** (11+ techniques for WAF bypass)
+
+#### v1.3.0 New Features
+- **Custom Plugin System** (Extend with your own scanners)
+- **Multi-Channel Notifications** (Email, Slack, Discord alerts)
+- **Enhanced OSINT Reporting** (Reconnaissance data in all reports)
 
 And 17+ more attack vectors
 

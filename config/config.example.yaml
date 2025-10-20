@@ -281,3 +281,41 @@ advanced:
   exclude_extensions: [".jpg", ".jpeg", ".png", ".gif", ".css", ".js", ".woff", ".woff2", ".ttf"]
   exclude_patterns: []
   max_response_size: 5242880  # 5MB
+
+# Plugin System (v1.3.0)
+plugin_manager:
+  enabled: false  # Enable custom plugin system
+  plugin_directory: "plugins"  # Directory for custom vulnerability scanner plugins
+  auto_load: true  # Automatically load all plugins on startup
+
+# Notification System (v1.3.0)
+notifications:
+  enabled: false  # Master switch for all notifications
+  notify_on_critical: true  # Send immediate alerts for critical vulnerabilities
+  
+  # Email Notifications
+  email:
+    enabled: false
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    username: "your-email@gmail.com"
+    password: "your-app-password"  # Use app-specific password
+    from_address: "deep-eye@yourcompany.com"
+    to_addresses:
+      - "security-team@yourcompany.com"
+      - "admin@yourcompany.com"
+  
+  # Slack Notifications
+  slack:
+    enabled: false
+    webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+    channel: "#security-alerts"  # Optional: override webhook channel
+    username: "Deep Eye Scanner"  # Optional: custom bot name
+    icon_emoji: ":shield:"  # Optional: custom emoji
+  
+  # Discord Notifications
+  discord:
+    enabled: false
+    webhook_url: "https://discord.com/api/webhooks/YOUR/WEBHOOK/URL"
+    username: "Deep Eye Scanner"  # Optional: custom bot name
+    avatar_url: ""  # Optional: custom avatar URL

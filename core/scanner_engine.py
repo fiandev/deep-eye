@@ -15,9 +15,11 @@ from rich.console import Console
 
 from core.vulnerability_scanner import VulnerabilityScanner
 from core.ai_payload_generator import AIPayloadGenerator
+from core.plugin_manager import PluginManager
 from modules.reconnaissance.recon_engine import ReconEngine
 from utils.http_client import HTTPClient
 from utils.parser import URLParser, ResponseParser
+from utils.notification_manager import NotificationManager
 from utils.logger import get_logger
 
 console = Console()
@@ -69,6 +71,17 @@ class ScannerEngine:
             config=config,
             http_client=self.http_client
         )
+        
+        self.plugin_manager = PluginManager(
+            http_client=self.http_client,
+            config=config
+        )
+        
+        # Load custom plugins
+        if config.get('plugin_manager', {}).get('enabled', False):
+            self.plugin_manager.load_plugins()
+        
+        self.notification_manager = NotificationManager(config)
         
         # State tracking
         self.visited_urls: Set[str] = set()
@@ -187,6 +200,19 @@ class ScannerEngine:
             
             vulnerabilities.extend(scan_results)
             
+            # Run custom plugins
+            if self.config.get('plugin_manager', {}).get('enabled', False):
+                plugin_results = self.plugin_manager.scan_with_plugins(url, context)
+                vulnerabilities.extend(plugin_results)
+            
+            # Send critical vulnerability alerts
+            for vuln in vulnerabilities:
+                if vuln.get('severity', '').lower() == 'critical':
+                    try:
+                        self.notification_manager.send_critical_vulnerability(vuln, self.target_url)
+                    except Exception as e:
+                        logger.debug(f"Error sending critical vulnerability alert: {e}")
+            
         except Exception as e:
             logger.error(f"Error scanning {url}: {e}")
         
@@ -297,6 +323,12 @@ class ScannerEngine:
         self.end_time = datetime.now()
         results['end_time'] = self.end_time.isoformat()
         results['duration'] = str(self.end_time - self.start_time)
+        
+        # Send scan completion notification
+        try:
+            self.notification_manager.send_scan_complete(results)
+        except Exception as e:
+            logger.error(f"Error sending notification: {e}")
         
         return results
     
