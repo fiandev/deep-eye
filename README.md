@@ -118,34 +118,53 @@ cp config/config.example.yaml config/config.yaml
 
 ## 🎯 Usage
 
-### Basic Scan
+### Quick Start
 ```bash
+# Scan with target from CLI
 python deep_eye.py -u https://example.com
+
+# Scan with configuration file
+python deep_eye.py -c myconfig.yaml
+
+# Verbose mode
+python deep_eye.py -u https://example.com -v
 ```
 
-### Advanced Scan with AI Provider
+### Configuration-Driven Scanning
+All scan options are configured in `config/config.yaml`:
+
+```yaml
+scanner:
+  target_url: "https://example.com"  # Default target
+  ai_provider: "openai"               # AI provider
+  default_depth: 2                    # Crawl depth
+  default_threads: 5                  # Thread count
+  enable_recon: true                  # Enable reconnaissance
+  full_scan: false                    # Full/quick scan mode
+  proxy: ""                           # Proxy settings
+  custom_headers: {}                  # Custom headers
+
+reporting:
+  enabled: true                       # Auto-generate reports
+  output_directory: "reports"         # Report directory
+  default_format: "html"              # Report format
+```
+
+Then run:
 ```bash
-python deep_eye.py -u https://example.com --ai-provider openai --depth 3 --threads 10
+python deep_eye.py
 ```
 
-### Full Reconnaissance + Scan
-```bash
-python deep_eye.py -u https://example.com --recon --full-scan --output report.pdf
+### Command Line Options (Minimal)
+```
+-u, --url              Target URL (overrides config)
+-c, --config           Configuration file path (default: config/config.yaml)
+-v, --verbose          Enable verbose output
+--version              Show version and exit
+--no-banner            Disable banner display
 ```
 
-### Command Line Options
-```
--u, --url              Target URL to scan
--d, --depth            Crawl depth (default: 2)
--t, --threads          Number of threads (default: 5)
---ai-provider          AI provider (openai/claude/grok/ollama)
---recon                Enable reconnaissance mode
---full-scan            Enable all vulnerability tests
--o, --output           Output report file
---format               Report format (pdf/html/json)
---proxy                Proxy URL
---headers              Custom headers (JSON format)
-```
+**Note:** All scanning options (depth, threads, AI provider, scan mode, proxy, etc.) are now configured in `config.yaml` for better management and repeatability.
 
 ## 📁 Project Structure
 

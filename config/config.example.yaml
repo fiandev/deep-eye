@@ -37,6 +37,10 @@ ai_providers:
 
 # Scanner Settings
 scanner:
+  # Target configuration
+  target_url: ""  # Default target URL (can be overridden via CLI)
+  
+  # Crawling settings
   default_threads: 5
   default_depth: 2
   max_urls: 1000
@@ -45,6 +49,19 @@ scanner:
   follow_redirects: true
   verify_ssl: true
   max_retries: 3
+  
+  # Scan modes
+  enable_recon: false  # Enable reconnaissance phase
+  full_scan: false     # Enable all vulnerability tests
+  quick_scan: false    # Quick scan (basic tests only)
+  
+  # AI Provider selection
+  ai_provider: "openai"  # Options: openai, claude, grok, ollama
+  
+  # Network settings
+  proxy: ""  # Proxy URL (e.g., http://127.0.0.1:8080)
+  custom_headers: {}  # Custom headers as key-value pairs
+  cookies: {}  # Cookies as key-value pairs
   
 # Vulnerability Scanner Settings
 vulnerability_scanner:
@@ -224,14 +241,22 @@ reconnaissance:
 
 # Report Settings
 reporting:
-  default_format: "html"
+  # Output configuration
+  enabled: true  # Generate reports automatically
+  output_directory: "reports"  # Directory to save reports
+  output_filename: ""  # Custom filename (auto-generated if empty)
+  default_format: "html"  # Options: html, pdf, json
+  
+  # Report sections
   include_sections:
     - executive_summary
     - vulnerability_details
     - remediation_guide
     - technical_details
+    - reconnaissance_data
     - appendix
   
+  # Severity colors
   severity_colors:
     critical: "#8B0000"
     high: "#FF4500"
@@ -239,6 +264,7 @@ reporting:
     low: "#FFD700"
     info: "#87CEEB"
   
+  # Branding
   branding:
     company_name: "Deep Eye Security"
     logo_path: "templates/logo.png"

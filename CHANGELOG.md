@@ -56,6 +56,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced scanner engine with comprehensive coverage of OWASP Top 10 and beyond
 - All new scanners include detailed evidence collection and remediation guidance
 - Improved error handling and logging for all scanner modules
+- **CLI simplified** - All scan options now configured via config.yaml (CLI only has -u, -c, -v, --version)
+- **Report generation** - Now fully controlled by config (output directory, filename, format)
+- **Config-driven architecture** - All modules read settings from centralized config
+
+### Fixed
+- **PDF Report Generation** - Fixed XML/HTML special character escaping for valid PDF output
+- **OSINT Integration** - Enhanced OSINT data collection and proper integration into reconnaissance flow
+- **Reconnaissance Data Flow** - OSINT results properly flattened and accessible in reports (emails, subdomains, technologies, breaches, GitHub leaks)
 
 ## [1.2.1] - 2025-10-15
 

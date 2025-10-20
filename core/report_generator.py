@@ -81,6 +81,7 @@ class ReportGenerator:
             from reportlab.lib import colors
             from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
             from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+            from xml.sax.saxutils import escape
             
             # Create PDF document
             doc = SimpleDocTemplate(output_path, pagesize=letter)
@@ -107,7 +108,7 @@ class ReportGenerator:
             )
             
             # Title
-            story.append(Paragraph("🔍 Deep Eye Security Assessment Report", title_style))
+            story.append(Paragraph("Deep Eye Security Assessment Report", title_style))
             story.append(Spacer(1, 0.2*inch))
             
             # Metadata table
@@ -163,20 +164,23 @@ class ReportGenerator:
                     emails = osint_data.get('emails', [])
                     if emails:
                         story.append(Paragraph(f"Emails found: {len(emails)}", styles['BodyText']))
-                        story.append(Paragraph(', '.join(emails[:5]), styles['BodyText']))
+                        safe_emails = [escape(str(e)) for e in emails[:5]]
+                        story.append(Paragraph(', '.join(safe_emails), styles['BodyText']))
                         story.append(Spacer(1, 0.1*inch))
                     
                     # Subdomains
                     subdomains = osint_data.get('subdomains', [])
                     if subdomains:
                         story.append(Paragraph(f"Subdomains discovered: {len(subdomains)}", styles['BodyText']))
-                        story.append(Paragraph(', '.join(subdomains[:10]), styles['BodyText']))
+                        safe_subdomains = [escape(str(s)) for s in subdomains[:10]]
+                        story.append(Paragraph(', '.join(safe_subdomains), styles['BodyText']))
                         story.append(Spacer(1, 0.1*inch))
                     
                     # Technologies
                     technologies = recon_data.get('technologies', [])
                     if technologies:
-                        story.append(Paragraph(f"Technologies detected: {', '.join(technologies)}", styles['BodyText']))
+                        safe_techs = [escape(str(t)) for t in technologies]
+                        story.append(Paragraph(f"Technologies detected: {', '.join(safe_techs)}", styles['BodyText']))
                         story.append(Spacer(1, 0.1*inch))
                 
                 story.append(PageBreak())
@@ -226,17 +230,25 @@ class ReportGenerator:
             
             if vulnerabilities:
                 for vuln in vulnerabilities:
-                    # Vulnerability title
-                    vuln_title = f"<b>{vuln.get('type', 'Unknown')}</b> - {vuln.get('severity', 'info').upper()}"
+                    # Vulnerability title (escape special characters)
+                    vuln_type = escape(str(vuln.get('type', 'Unknown')))
+                    vuln_severity = escape(str(vuln.get('severity', 'info').upper()))
+                    vuln_title = f"<b>{vuln_type}</b> - {vuln_severity}"
                     story.append(Paragraph(vuln_title, styles['Heading3']))
                     
-                    # Vulnerability details
+                    # Vulnerability details (escape special characters)
+                    vuln_url = escape(str(vuln.get('url', 'N/A')))
+                    vuln_param = escape(str(vuln.get('parameter', 'N/A')))
+                    vuln_desc = escape(str(vuln.get('description', 'N/A')))
+                    vuln_evidence = escape(str(vuln.get('evidence', 'N/A'))[:200])  # Limit evidence length
+                    vuln_remediation = escape(str(vuln.get('remediation', 'N/A')))
+                    
                     vuln_details = f"""
-                    <b>URL:</b> {vuln.get('url', 'N/A')}<br/>
-                    <b>Parameter:</b> {vuln.get('parameter', 'N/A')}<br/>
-                    <b>Description:</b> {vuln.get('description', 'N/A')}<br/>
-                    <b>Evidence:</b> {vuln.get('evidence', 'N/A')}<br/>
-                    <b>Remediation:</b> {vuln.get('remediation', 'N/A')}
+                    <b>URL:</b> {vuln_url}<br/>
+                    <b>Parameter:</b> {vuln_param}<br/>
+                    <b>Description:</b> {vuln_desc}<br/>
+                    <b>Evidence:</b> {vuln_evidence}<br/>
+                    <b>Remediation:</b> {vuln_remediation}
                     """
                     story.append(Paragraph(vuln_details, styles['BodyText']))
                     story.append(Spacer(1, 0.2*inch))

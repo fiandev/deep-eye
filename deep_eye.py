@@ -8,7 +8,7 @@ import sys
 import argparse
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 from rich.console import Console
 from rich.panel import Panel
 from rich import print as rprint
@@ -51,114 +51,45 @@ def parse_arguments() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  Basic scan:
+  Scan with target from CLI:
     python deep_eye.py -u https://example.com
   
-  Full scan with AI:
-    python deep_eye.py -u https://example.com --ai-provider openai --full-scan
+  Scan with target from config:
+    python deep_eye.py --config myconfig.yaml
   
-  Reconnaissance mode:
-    python deep_eye.py -u https://example.com --recon --output recon_report.pdf
+  Verbose mode:
+    python deep_eye.py -u https://example.com -v
+  
+Note: All scan options are configured in config.yaml
+      Use --config to specify a custom configuration file
         """
     )
     
-    # Target options
+    # Essential options only
     parser.add_argument(
         '-u', '--url',
         type=str,
-        required=True,
-        help='Target URL to scan'
-    )
-    
-    # Scanning options
-    parser.add_argument(
-        '-d', '--depth',
-        type=int,
-        default=2,
-        help='Crawl depth (default: 2)'
+        help='Target URL to scan (overrides config)'
     )
     
     parser.add_argument(
-        '-t', '--threads',
-        type=int,
-        default=5,
-        help='Number of threads (default: 5)'
-    )
-    
-    # AI Provider options
-    parser.add_argument(
-        '--ai-provider',
-        type=str,
-        choices=['openai', 'claude', 'grok', 'ollama'],
-        default='openai',
-        help='AI provider to use (default: openai)'
-    )
-    
-    # Scan modes
-    parser.add_argument(
-        '--recon',
-        action='store_true',
-        help='Enable reconnaissance mode'
-    )
-    
-    parser.add_argument(
-        '--full-scan',
-        action='store_true',
-        help='Enable all vulnerability tests'
-    )
-    
-    parser.add_argument(
-        '--quick-scan',
-        action='store_true',
-        help='Quick scan (basic tests only)'
-    )
-    
-    # Output options
-    parser.add_argument(
-        '-o', '--output',
-        type=str,
-        help='Output report file path'
-    )
-    
-    parser.add_argument(
-        '--format',
-        type=str,
-        choices=['pdf', 'html', 'json'],
-        default='html',
-        help='Report format (default: html)'
-    )
-    
-    # Network options
-    parser.add_argument(
-        '--proxy',
-        type=str,
-        help='Proxy URL (e.g., http://127.0.0.1:8080)'
-    )
-    
-    parser.add_argument(
-        '--headers',
-        type=str,
-        help='Custom headers in JSON format'
-    )
-    
-    parser.add_argument(
-        '--cookies',
-        type=str,
-        help='Cookies in JSON format'
-    )
-    
-    # Advanced options
-    parser.add_argument(
-        '--config',
+        '-c', '--config',
         type=str,
         default='config/config.yaml',
-        help='Configuration file path'
+        help='Configuration file path (default: config/config.yaml)'
     )
     
     parser.add_argument(
-        '--verbose',
+        '-v', '--verbose',
         action='store_true',
         help='Enable verbose output'
+    )
+    
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='Deep Eye v1.3.0 (Hestia)',
+        help='Show version and exit'
     )
     
     parser.add_argument(
@@ -176,38 +107,29 @@ def display_banner():
     console.print("⚠️  [bold yellow]Use only on authorized targets[/bold yellow] ⚠️\n")
 
 
-def validate_arguments(args: argparse.Namespace) -> bool:
-    """Validate command line arguments."""
+def validate_config(config: Dict, target_url: str) -> bool:
+    """Validate configuration and target URL."""
     # Validate URL
-    if not args.url.startswith(('http://', 'https://')):
+    if not target_url:
+        console.print("[bold red]Error:[/bold red] Target URL is required. Specify in config or use -u option.")
+        return False
+    
+    if not target_url.startswith(('http://', 'https://')):
         console.print("[bold red]Error:[/bold red] URL must start with http:// or https://")
         return False
     
-    # Validate depth
-    if args.depth < 1 or args.depth > 10:
-        console.print("[bold red]Error:[/bold red] Depth must be between 1 and 10")
+    # Validate scanner settings
+    scanner_config = config.get('scanner', {})
+    depth = scanner_config.get('default_depth', 2)
+    threads = scanner_config.get('default_threads', 5)
+    
+    if depth < 1 or depth > 10:
+        console.print("[bold red]Error:[/bold red] Depth must be between 1 and 10 (check config)")
         return False
     
-    # Validate threads
-    if args.threads < 1 or args.threads > 50:
-        console.print("[bold red]Error:[/bold red] Threads must be between 1 and 50")
+    if threads < 1 or threads > 50:
+        console.print("[bold red]Error:[/bold red] Threads must be between 1 and 50 (check config)")
         return False
-    
-    # Validate headers if provided
-    if args.headers:
-        try:
-            json.loads(args.headers)
-        except json.JSONDecodeError:
-            console.print("[bold red]Error:[/bold red] Headers must be valid JSON")
-            return False
-    
-    # Validate cookies if provided
-    if args.cookies:
-        try:
-            json.loads(args.cookies)
-        except json.JSONDecodeError:
-            console.print("[bold red]Error:[/bold red] Cookies must be valid JSON")
-            return False
     
     return True
 
@@ -222,45 +144,60 @@ def main():
         if not args.no_banner:
             display_banner()
         
-        # Validate arguments
-        if not validate_arguments(args):
-            sys.exit(1)
-        
         # Load configuration
         console.print("[bold blue]Loading configuration...[/bold blue]")
         config = ConfigLoader.load(args.config)
         
-        # Initialize AI Provider
-        console.print(f"[bold blue]Initializing AI Provider: {args.ai_provider}[/bold blue]")
-        ai_manager = AIProviderManager(config)
-        ai_manager.set_provider(args.ai_provider)
+        # Get scanner config
+        scanner_config = config.get('scanner', {})
         
-        # Parse custom headers and cookies
-        custom_headers = json.loads(args.headers) if args.headers else {}
-        cookies = json.loads(args.cookies) if args.cookies else {}
+        # Target URL: CLI overrides config
+        target_url = args.url or scanner_config.get('target_url', '')
+        
+        # Validate configuration
+        if not validate_config(config, target_url):
+            sys.exit(1)
+        
+        # Get all settings from config
+        depth = scanner_config.get('default_depth', 2)
+        threads = scanner_config.get('default_threads', 5)
+        ai_provider = scanner_config.get('ai_provider', 'openai')
+        enable_recon = scanner_config.get('enable_recon', False)
+        full_scan = scanner_config.get('full_scan', False)
+        quick_scan = scanner_config.get('quick_scan', False)
+        proxy = scanner_config.get('proxy') or None
+        custom_headers = scanner_config.get('custom_headers', {})
+        cookies = scanner_config.get('cookies', {})
+        verbose = args.verbose
+        
+        # Initialize AI Provider
+        console.print(f"[bold blue]Initializing AI Provider: {ai_provider}[/bold blue]")
+        ai_manager = AIProviderManager(config)
+        ai_manager.set_provider(ai_provider)
         
         # Initialize Scanner Engine
         console.print("[bold blue]Initializing Scanner Engine...[/bold blue]")
         scanner = ScannerEngine(
-            target_url=args.url,
+            target_url=target_url,
             config=config,
             ai_manager=ai_manager,
-            depth=args.depth,
-            threads=args.threads,
-            proxy=args.proxy,
+            depth=depth,
+            threads=threads,
+            proxy=proxy,
             custom_headers=custom_headers,
             cookies=cookies,
-            verbose=args.verbose
+            verbose=verbose
         )
         
         # Display scan configuration
+        scan_mode = 'Full Scan' if full_scan else 'Quick Scan' if quick_scan else 'Standard Scan'
         scan_info = Panel(
-            f"""[bold]Target:[/bold] {args.url}
-[bold]Depth:[/bold] {args.depth}
-[bold]Threads:[/bold] {args.threads}
-[bold]AI Provider:[/bold] {args.ai_provider}
-[bold]Scan Mode:[/bold] {'Full Scan' if args.full_scan else 'Quick Scan' if args.quick_scan else 'Standard Scan'}
-[bold]Reconnaissance:[/bold] {'Enabled' if args.recon else 'Disabled'}""",
+            f"""[bold]Target:[/bold] {target_url}
+[bold]Depth:[/bold] {depth}
+[bold]Threads:[/bold] {threads}
+[bold]AI Provider:[/bold] {ai_provider}
+[bold]Scan Mode:[/bold] {scan_mode}
+[bold]Reconnaissance:[/bold] {'Enabled' if enable_recon else 'Disabled'}""",
             title="Scan Configuration",
             border_style="green"
         )
@@ -270,21 +207,38 @@ def main():
         console.print("\n[bold green]Starting scan...[/bold green]\n")
         
         results = scanner.scan(
-            enable_recon=args.recon,
-            full_scan=args.full_scan,
-            quick_scan=args.quick_scan
+            enable_recon=enable_recon,
+            full_scan=full_scan,
+            quick_scan=quick_scan
         )
         
-        # Generate report
-        if args.output or results.get('vulnerabilities'):
+        # Generate report (from config)
+        reporting_config = config.get('reporting', {})
+        if reporting_config.get('enabled', True):
             console.print("\n[bold blue]Generating report...[/bold blue]")
             report_gen = ReportGenerator(config)
             
-            output_path = args.output or f"deep_eye_report_{Path(args.url).stem}.{args.format}"
+            # Get output settings from config
+            output_dir = reporting_config.get('output_directory', 'reports')
+            output_filename = reporting_config.get('output_filename', '')
+            report_format = reporting_config.get('default_format', 'html')
+            
+            # Create output directory if it doesn't exist
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
+            
+            # Generate filename if not specified
+            if not output_filename:
+                from datetime import datetime
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                domain = Path(target_url).stem.replace(':', '_')
+                output_filename = f"deep_eye_{domain}_{timestamp}.{report_format}"
+            
+            output_path = str(Path(output_dir) / output_filename)
+            
             report_gen.generate(
                 results=results,
                 output_path=output_path,
-                format=args.format
+                format=report_format
             )
             
             console.print(f"[bold green]✓[/bold green] Report saved to: {output_path}")

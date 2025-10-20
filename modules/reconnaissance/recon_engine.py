@@ -62,10 +62,23 @@ class ReconEngine:
             results['subdomains'] = self._enumerate_subdomains(results['domain'])
         
         # OSINT gathering (integrated from osint_enhanced module)
-        osint_config = self.config.get('osint', {})
-        if osint_config.get('enabled', False):
+        if 'osint_gathering' in self.enabled_modules:
             logger.info(f"Running OSINT intelligence gathering on {results['domain']}")
-            results['osint'] = self.osint_enhanced.gather_intelligence(results['domain'])
+            osint_results = self.osint_enhanced.gather_intelligence(results['domain'])
+            results['osint'] = osint_results
+            
+            # Flatten structure for easier access in reports
+            results['osint']['emails'] = osint_results.get('email_addresses', [])
+            results['osint']['subdomains'] = osint_results.get('certificate_transparency', [])
+            results['osint']['technologies'] = osint_results.get('technology_intelligence', {})
+            results['osint']['breaches'] = osint_results.get('data_breaches', [])
+            results['osint']['github_leaks'] = osint_results.get('exposed_files', [])
+            results['osint']['social_media'] = osint_results.get('social_media', {})
+            results['osint']['cloud_resources'] = osint_results.get('cloud_resources', {})
+        
+        # Also collect basic DNS info
+        if 'dns_records' not in results and results.get('domain'):
+            results['dns'] = self._get_dns_records(results['domain'])
         
         return results
     
