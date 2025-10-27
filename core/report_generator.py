@@ -302,7 +302,7 @@ class ReportGenerator:
         )
     
     def _get_html_template(self) -> str:
-        """Get HTML report template."""
+        """Get HTML report template with enhanced features."""
         return '''
 <!DOCTYPE html>
 <html lang="en">
@@ -310,6 +310,23 @@ class ReportGenerator:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+    
+    <!-- jQuery and DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -325,7 +342,7 @@ class ReportGenerator:
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -363,6 +380,26 @@ class ReportGenerator:
             margin-bottom: 10px;
         }
         
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
         .severity-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -376,6 +413,12 @@ class ReportGenerator:
             color: white;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .severity-card:hover {
+            transform: translateY(-5px);
         }
         
         .severity-critical { background-color: #8B0000; }
@@ -402,6 +445,27 @@ class ReportGenerator:
             margin-bottom: 20px;
             border-bottom: 2px solid #667eea;
             padding-bottom: 10px;
+        }
+        
+        .filter-controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-controls label {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .filter-controls select {
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
         }
         
         .vulnerability {
@@ -444,6 +508,34 @@ class ReportGenerator:
             overflow-x: auto;
             font-family: 'Courier New', monospace;
             margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .evidence-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .evidence-box h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .screenshot-container {
+            margin: 15px 0;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .screenshot-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
         }
         
         .recon-subsection {
@@ -473,6 +565,52 @@ class ReportGenerator:
             color: #666;
             margin-top: 30px;
         }
+        
+        .dataTables_wrapper {
+            padding: 20px 0;
+        }
+        
+        table.dataTable {
+            width: 100% !important;
+        }
+        
+        .severity-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.8em;
+        }
+        
+        .badge-critical { background-color: #8B0000; }
+        .badge-high { background-color: #FF4500; }
+        .badge-medium { background-color: #FFA500; }
+        .badge-low { background-color: #FFD700; color: #333; }
+        .badge-info { background-color: #87CEEB; color: #333; }
+        
+        .expandable-content {
+            display: none;
+            margin-top: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+        }
+        
+        .expand-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .expand-btn:hover {
+            background: #5568d3;
+        }
     </style>
 </head>
 <body>
@@ -484,33 +622,49 @@ class ReportGenerator:
         
         <div class="metadata">
             <div class="metadata-card">
-                <h3>Target</h3>
+                <h3>🎯 Target</h3>
                 <p>{{ target }}</p>
             </div>
             <div class="metadata-card">
-                <h3>Scan Duration</h3>
+                <h3>⏱️ Scan Duration</h3>
                 <p>{{ scan_duration }}</p>
             </div>
             <div class="metadata-card">
-                <h3>URLs Scanned</h3>
+                <h3>🔗 URLs Scanned</h3>
                 <p>{{ urls_scanned }}</p>
+            </div>
+            <div class="metadata-card">
+                <h3>🐛 Total Vulnerabilities</h3>
+                <p style="font-size: 2em; font-weight: bold; color: #667eea;">{{ vulnerabilities|length }}</p>
+            </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3>📊 Severity Distribution</h3>
+                <canvas id="severityChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>📈 Vulnerability Types</h3>
+                <canvas id="typeChart"></canvas>
             </div>
         </div>
         
         <div class="severity-grid">
-            <div class="severity-card severity-critical">
+            <div class="severity-card severity-critical" onclick="filterBySeverity('critical')">
                 <h3>{{ severity_counts.critical }}</h3>
                 <p>Critical</p>
             </div>
-            <div class="severity-card severity-high">
+            <div class="severity-card severity-high" onclick="filterBySeverity('high')">
                 <h3>{{ severity_counts.high }}</h3>
                 <p>High</p>
             </div>
-            <div class="severity-card severity-medium">
+            <div class="severity-card severity-medium" onclick="filterBySeverity('medium')">
                 <h3>{{ severity_counts.medium }}</h3>
                 <p>Medium</p>
             </div>
-            <div class="severity-card severity-low">
+            <div class="severity-card severity-low" onclick="filterBySeverity('low')">
                 <h3>{{ severity_counts.low }}</h3>
                 <p>Low</p>
             </div>
@@ -571,42 +725,200 @@ class ReportGenerator:
         {% endif %}
         
         <div class="section">
-            <h2>Executive Summary</h2>
-            <p>{{ summary }}</p>
+            <h2>📋 Executive Summary</h2>
+            <p style="white-space: pre-line;">{{ summary }}</p>
         </div>
         
         <div class="section">
-            <h2>Vulnerabilities</h2>
+            <h2>🐛 Vulnerabilities</h2>
+            
+            <div class="filter-controls">
+                <label for="severityFilter">Filter by Severity:</label>
+                <select id="severityFilter">
+                    <option value="">All Severities</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+                
+                <label for="typeFilter">Filter by Type:</label>
+                <select id="typeFilter">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+            
             {% if vulnerabilities %}
-                {% for vuln in vulnerabilities %}
-                <div class="vulnerability {{ vuln.severity }}">
-                    <h3>{{ vuln.type }}</h3>
-                    <div class="vulnerability-meta">
-                        <span><strong>Severity:</strong> {{ vuln.severity|upper }}</span>
-                        <span><strong>URL:</strong> {{ vuln.url }}</span>
-                        {% if vuln.parameter %}
-                        <span><strong>Parameter:</strong> {{ vuln.parameter }}</span>
-                        {% endif %}
-                    </div>
-                    <p><strong>Description:</strong> {{ vuln.description }}</p>
-                    {% if vuln.payload %}
-                    <p><strong>Payload:</strong></p>
-                    <div class="code">{{ vuln.payload }}</div>
-                    {% endif %}
-                    <p><strong>Evidence:</strong> {{ vuln.evidence }}</p>
-                    <p><strong>Remediation:</strong> {{ vuln.remediation }}</p>
-                </div>
-                {% endfor %}
+                <table id="vulnTable" class="display responsive nowrap" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Severity</th>
+                            <th>URL</th>
+                            <th>Parameter</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vuln in vulnerabilities %}
+                        <tr>
+                            <td>{{ vuln.type }}</td>
+                            <td><span class="severity-badge badge-{{ vuln.severity }}">{{ vuln.severity }}</span></td>
+                            <td style="word-break: break-all;">{{ vuln.url[:50] }}...</td>
+                            <td>{{ vuln.parameter or 'N/A' }}</td>
+                            <td>
+                                <button class="expand-btn" onclick="toggleDetails('vuln-{{ loop.index }}')">View Details</button>
+                                <div id="vuln-{{ loop.index }}" class="expandable-content">
+                                    <div class="vulnerability {{ vuln.severity }}">
+                                        <h3>{{ vuln.type }}</h3>
+                                        <div class="vulnerability-meta">
+                                            <span><strong>Severity:</strong> {{ vuln.severity|upper }}</span>
+                                            <span><strong>URL:</strong> {{ vuln.url }}</span>
+                                            {% if vuln.parameter %}
+                                            <span><strong>Parameter:</strong> {{ vuln.parameter }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <p><strong>Description:</strong> {{ vuln.description }}</p>
+                                        {% if vuln.payload %}
+                                        <div class="evidence-box">
+                                            <h4>💉 Payload Used:</h4>
+                                            <div class="code">{{ vuln.payload }}</div>
+                                        </div>
+                                        {% endif %}
+                                        <div class="evidence-box">
+                                            <h4>🔍 Evidence:</h4>
+                                            <p>{{ vuln.evidence }}</p>
+                                        </div>
+                                        {% if vuln.screenshot %}
+                                        <div class="screenshot-container">
+                                            <img src="{{ vuln.screenshot }}" alt="Vulnerability Screenshot">
+                                        </div>
+                                        {% endif %}
+                                        <p><strong>🛡️ Remediation:</strong> {{ vuln.remediation }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             {% else %}
                 <p>No vulnerabilities detected.</p>
             {% endif %}
         </div>
         
         <div class="footer">
-            <p>This report was generated by Deep Eye - Advanced AI-Driven Penetration Testing Tool</p>
+            <p>This report was generated by <strong>Deep Eye v1.3.0</strong> - Advanced AI-Driven Penetration Testing Tool</p>
             <p>⚠️ This report contains sensitive security information. Handle with care.</p>
         </div>
     </div>
+    
+    <script>
+        // Initialize DataTable
+        $(document).ready(function() {
+            var table = $('#vulnTable').DataTable({
+                responsive: true,
+                pageLength: 25,
+                order: [[1, 'asc']], // Sort by severity
+                buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+            });
+            
+            // Populate type filter
+            var types = new Set();
+            {% for vuln in vulnerabilities %}
+            types.add('{{ vuln.type }}');
+            {% endfor %}
+            types.forEach(function(type) {
+                $('#typeFilter').append('<option value="' + type + '">' + type + '</option>');
+            });
+            
+            // Filter functionality
+            $('#severityFilter').on('change', function() {
+                table.column(1).search(this.value).draw();
+            });
+            
+            $('#typeFilter').on('change', function() {
+                table.column(0).search(this.value).draw();
+            });
+        });
+        
+        // Toggle details
+        function toggleDetails(id) {
+            var element = document.getElementById(id);
+            if (element.style.display === 'none' || element.style.display === '') {
+                element.style.display = 'block';
+            } else {
+                element.style.display = 'none';
+            }
+        }
+        
+        // Filter by severity (from cards)
+        function filterBySeverity(severity) {
+            $('#severityFilter').val(severity).trigger('change');
+        }
+        
+        // Severity Chart
+        var ctxSeverity = document.getElementById('severityChart').getContext('2d');
+        var severityChart = new Chart(ctxSeverity, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'High', 'Medium', 'Low'],
+                datasets: [{
+                    data: [
+                        {{ severity_counts.critical }},
+                        {{ severity_counts.high }},
+                        {{ severity_counts.medium }},
+                        {{ severity_counts.low }}
+                    ],
+                    backgroundColor: ['#8B0000', '#FF4500', '#FFA500', '#FFD700']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        // Vulnerability Types Chart
+        var vulnTypes = {};
+        {% for vuln in vulnerabilities %}
+        var type = '{{ vuln.type }}';
+        vulnTypes[type] = (vulnTypes[type] || 0) + 1;
+        {% endfor %}
+        
+        var ctxType = document.getElementById('typeChart').getContext('2d');
+        var typeChart = new Chart(ctxType, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(vulnTypes),
+                datasets: [{
+                    label: 'Count',
+                    data: Object.values(vulnTypes),
+                    backgroundColor: '#667eea'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
 '''

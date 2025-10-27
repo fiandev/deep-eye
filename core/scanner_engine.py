@@ -16,7 +16,9 @@ from rich.console import Console
 from core.vulnerability_scanner import VulnerabilityScanner
 from core.ai_payload_generator import AIPayloadGenerator
 from core.plugin_manager import PluginManager
+from core.pentest_state_manager import PentestStateManager, PentestPhase
 from modules.reconnaissance.recon_engine import ReconEngine
+from modules.browser_automation.smart_tester import SmartBrowserTester
 from utils.http_client import HTTPClient
 from utils.parser import URLParser, ResponseParser
 from utils.notification_manager import NotificationManager
@@ -83,7 +85,11 @@ class ScannerEngine:
         
         self.notification_manager = NotificationManager(config)
         
-        # State tracking
+        # Browser automation
+        self.browser_tester = SmartBrowserTester(config)
+        
+        # State tracking and management
+        self.state_manager = PentestStateManager(target_url)
         self.visited_urls: Set[str] = set()
         self.urls_to_scan: List[str] = [target_url]
         self.vulnerabilities: List[Dict] = []
@@ -128,6 +134,7 @@ class ScannerEngine:
     
     def crawl_recursive(self) -> Set[str]:
         """Recursively crawl the target website."""
+        self.state_manager.set_phase(PentestPhase.CRAWLING)
         console.print("[bold blue]🕷️  Starting web crawler...[/bold blue]")
         
         all_urls = set([self.target_url])
@@ -159,6 +166,7 @@ class ScannerEngine:
                     if link not in all_urls:
                         all_urls.add(link)
                         queue.append((link, depth + 1))
+                        self.state_manager.update_urls(discovered=1)
                 
                 progress.update(
                     task,
@@ -173,9 +181,12 @@ class ScannerEngine:
         vulnerabilities = []
         
         try:
+            self.state_manager.current_url_testing = url
+            
             # Get AI-generated payloads for this URL
             response = self.http_client.get(url)
             if not response:
+                self.state_manager.update_urls(tested=1)
                 return vulnerabilities
             
             context = {
@@ -191,27 +202,41 @@ class ScannerEngine:
             # Generate intelligent payloads
             payloads = self.ai_payload_generator.generate_payloads(context)
             
-            # Run vulnerability scans
+            # Run vulnerability scans with state tracking
             scan_results = self.vulnerability_scanner.scan(
                 url=url,
                 payloads=payloads,
-                context=context
+                context=context,
+                state_manager=self.state_manager
             )
             
             vulnerabilities.extend(scan_results)
+            
+            # Run browser-based tests if enabled
+            if self.config.get('advanced', {}).get('enable_javascript_rendering', False):
+                try:
+                    browser_vulns = self.browser_tester.test_browser_sync(url, payloads)
+                    vulnerabilities.extend(browser_vulns)
+                except Exception as e:
+                    logger.debug(f"Browser testing failed for {url}: {e}")
             
             # Run custom plugins
             if self.config.get('plugin_manager', {}).get('enabled', False):
                 plugin_results = self.plugin_manager.scan_with_plugins(url, context)
                 vulnerabilities.extend(plugin_results)
             
-            # Send critical vulnerability alerts
+            # Update state with found vulnerabilities
             for vuln in vulnerabilities:
+                self.state_manager.add_vulnerability(vuln.get('severity', 'info'))
+                
+                # Send critical vulnerability alerts
                 if vuln.get('severity', '').lower() == 'critical':
                     try:
                         self.notification_manager.send_critical_vulnerability(vuln, self.target_url)
                     except Exception as e:
                         logger.debug(f"Error sending critical vulnerability alert: {e}")
+            
+            self.state_manager.update_urls(tested=1)
             
         except Exception as e:
             logger.error(f"Error scanning {url}: {e}")
@@ -220,7 +245,9 @@ class ScannerEngine:
     
     def scan_all_urls(self, urls: Set[str], recon_data: Optional[Dict] = None):
         """Scan all discovered URLs for vulnerabilities."""
+        self.state_manager.set_phase(PentestPhase.VULNERABILITY_SCANNING)
         console.print("[bold blue]🔍 Starting vulnerability scanning...[/bold blue]")
+        console.print(f"[dim]Phase: {self.state_manager.current_phase.value}[/dim]\n")
         
         with Progress(
             SpinnerColumn(),
@@ -250,9 +277,14 @@ class ScannerEngine:
                             self.vulnerabilities.extend(vulns)
                         
                         progress.advance(task)
+                        
+                        # Show detailed progress with state
+                        critical = sum(1 for v in self.vulnerabilities if v.get('severity') == 'critical')
+                        high = sum(1 for v in self.vulnerabilities if v.get('severity') == 'high')
+                        
                         progress.update(
                             task,
-                            description=f"[cyan]Scanning... {len(self.vulnerabilities)} vulnerabilities found"
+                            description=f"[cyan]Scanning... {len(self.vulnerabilities)} vulns (🔴{critical} 🟠{high})"
                         )
                         
                     except Exception as e:
@@ -263,7 +295,9 @@ class ScannerEngine:
     
     def run_reconnaissance(self) -> Dict:
         """Run reconnaissance modules."""
+        self.state_manager.set_phase(PentestPhase.RECONNAISSANCE)
         console.print("[bold blue]🔎 Running reconnaissance...[/bold blue]")
+        console.print(f"[dim]Phase: {self.state_manager.current_phase.value}[/dim]\n")
         recon_results = self.recon_engine.run(self.target_url)
         console.print("[green]✓[/green] Reconnaissance complete\n")
         return recon_results
@@ -286,6 +320,7 @@ class ScannerEngine:
             Dictionary containing scan results
         """
         self.start_time = datetime.now()
+        self.state_manager.set_phase(PentestPhase.INITIALIZATION)
         
         results = {
             'target': self.target_url,
@@ -294,7 +329,9 @@ class ScannerEngine:
                 'depth': self.depth,
                 'threads': self.threads,
                 'recon_enabled': enable_recon,
-                'scan_mode': 'full' if full_scan else 'quick' if quick_scan else 'standard'
+                'scan_mode': 'full' if full_scan else 'quick' if quick_scan else 'standard',
+                'browser_enabled': self.config.get('advanced', {}).get('enable_javascript_rendering', False),
+                'screenshot_enabled': self.config.get('advanced', {}).get('screenshot_enabled', False)
             }
         }
         
@@ -320,15 +357,25 @@ class ScannerEngine:
         results['vulnerabilities'] = self.vulnerabilities
         results['severity_summary'] = self._calculate_severity_summary()
         
+        # Add pentest state information
+        results['pentest_state'] = self.state_manager.get_state_dict()
+        
         self.end_time = datetime.now()
+        self.state_manager.set_phase(PentestPhase.REPORTING)
         results['end_time'] = self.end_time.isoformat()
         results['duration'] = str(self.end_time - self.start_time)
+        
+        # Display state summary
+        console.print("\n")
+        self.state_manager.display_summary()
         
         # Send scan completion notification
         try:
             self.notification_manager.send_scan_complete(results)
         except Exception as e:
             logger.error(f"Error sending notification: {e}")
+        
+        self.state_manager.set_phase(PentestPhase.COMPLETED)
         
         return results
     
