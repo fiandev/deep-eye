@@ -72,7 +72,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Template injection payloads for various frameworks
   - Enhanced LFI/RFI payloads with null byte injection
 
+#### Experimental Features (v1.4.0+)
+- **CVE Intelligence System** - Real-world vulnerability intelligence
+  - **CVE Scraper** - Scrapes CVEs from NVD (National Vulnerability Database)
+  - **SQLite Storage** - Stores CVEs, exploits, and technology mappings
+  - **CVE Matcher** - Matches detected technologies with relevant CVEs
+  - **Exploit Extraction** - Extracts exploit payloads from CVE data
+  - **CVE-Based Payloads** - Generates payloads based on real CVE exploits
+  - **Technology Mapping** - Maps CVEs to affected technologies and versions
+  - **Auto-Update Script** - `scripts/update_cve_database.py` for easy updates
+  - **Severity Filtering** - Filter CVEs by severity (CRITICAL, HIGH, MEDIUM, LOW)
+  
+- **Advanced Subdomain Reconnaissance** - Comprehensive subdomain discovery and scanning
+  - **Certificate Transparency** - Query crt.sh for subdomain certificates
+  - **DNS Bruteforce** - Test 100+ common subdomain patterns
+  - **Search Engine Enumeration** - Discover subdomains via search engines
+  - **Subdomain Verification** - Verify subdomain liveness via HTTP/HTTPS
+  - **Parallel Scanning** - Scan multiple subdomains concurrently
+  - **Subdomain Intelligence** - Gather info (IP, server, title, technologies) per subdomain
+  - **Aggregate Reporting** - Combine all subdomain vulnerabilities in main report
+  - **Smart Filtering** - Limit number of subdomains to scan (configurable)
+
 ### Changed
+- **AI Provider Support Expanded**
+  - Added Google Gemini as AI provider option
+  - Now supports 5 AI providers: OpenAI, Claude, Grok, OLLAMA, Gemini
+  - Gemini offers fast and cost-effective AI-powered testing
+  
 - **Scanner Engine Updates**
   - Integrated browser automation for enhanced testing
   - Added state management for real-time progress tracking
@@ -80,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced CLI output with phase indicators and real-time stats
   - Better error handling and logging
   - Added hidden element testing to all browser scans
+  - Added subdomain discovery and scanning capability
 
 - **Vulnerability Scanner Improvements**
   - Added state_manager parameter to scan() method for tracking
@@ -104,6 +131,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Context hashing for efficient cache lookups
   - Reduced payload count with smart selection
   - Deduplication of generated payloads
+  - CVE database indexing for fast lookups
+  - Parallel subdomain verification
+
+- **CVE Intelligence Integration**
+  - AI payload generator now uses CVE database for targeted payloads
+  - Automatic technology-to-CVE matching
+  - Prioritizes CVE-based exploits over generic payloads
+  - Real-world exploit patterns from CVE data
 
 ### Fixed
 - Browser automation error handling
@@ -116,9 +151,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `playwright>=1.40.0` for browser automation
 - Added `browser-use>=0.1.0` for AI-powered browser automation (71.8k+ stars)
 - Added `langchain-openai>=0.1.0` for Browser Use AI integration
+- Added `google-generativeai>=0.3.0` for Google Gemini AI provider
 - Chart.js 4.4.0 (CDN) for interactive charts
 - DataTables 1.13.7 (CDN) for enhanced tables
 - jQuery 3.7.0 (CDN) for DataTables functionality
+- Uses existing `dnspython` for DNS subdomain enumeration
+- Uses existing `sqlite3` (built-in) for CVE database
+
+### New Scripts
+- Added `scripts/update_cve_database.py` - CVE database updater and builder
+  - Scrapes CVEs from NVD API (with fallback to built-in patterns)
+  - Creates SQLite database with CVE intelligence
+  - Generates exploit patterns automatically
+  - Display comprehensive database statistics
 
 ### Documentation
 - Updated QUICKSTART.md with browser automation instructions
@@ -126,6 +171,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added configuration examples for new features
 - Added troubleshooting for browser automation
 - Added performance tips
+- Added experimental features documentation (CVE Intelligence, Subdomain Scanning)
+- Added CVE database update instructions
+- Added subdomain scanning examples
+- Updated README.md with v1.4.0 features and experimental section
 
 ## [1.3.0] - 2025-10-20
 

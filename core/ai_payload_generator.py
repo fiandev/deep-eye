@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 from urllib.parse import urlparse, parse_qs
 from functools import lru_cache
 import hashlib
+from pathlib import Path
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,6 +23,21 @@ class AIPayloadGenerator:
         self.payload_config = config.get('vulnerability_scanner', {}).get('payload_generation', {})
         self.payload_cache = {}  # Cache for generated payloads
         self.use_context_aware = self.payload_config.get('context_aware', True)
+        self.use_cve_database = self.payload_config.get('cve_database', True)
+        self.cve_matcher = None
+        
+        # Initialize CVE matcher if enabled
+        if self.use_cve_database:
+            try:
+                from modules.cve_intelligence.cve_matcher import CVEMatcher
+                db_path = Path("data/cve_intelligence.db")
+                if db_path.exists():
+                    self.cve_matcher = CVEMatcher(str(db_path))
+                    logger.info("CVE matcher initialized")
+                else:
+                    logger.info("CVE database not found, run CVE scraper first")
+            except Exception as e:
+                logger.debug(f"CVE matcher initialization failed: {e}")
         
     def generate_payloads(self, context: Dict) -> Dict[str, List[str]]:
         """
@@ -60,6 +76,18 @@ class AIPayloadGenerator:
             payloads['path_traversal'] = self._generate_path_traversal_payloads(context)
             payloads['lfi'] = self._generate_lfi_payloads(context)
             payloads['ssti'] = self._generate_ssti_payloads(context, tech_stack)
+            
+            # Enrich with CVE-based payloads if available
+            if self.cve_matcher and tech_stack:
+                cve_matches = self.cve_matcher.match_technology_cves(tech_stack)
+                cve_payloads = self.cve_matcher.get_payloads_from_cves(cve_matches)
+                
+                # Merge CVE payloads with generated ones (CVE payloads first - higher priority)
+                for attack_type, cve_payload_list in cve_payloads.items():
+                    if attack_type in payloads and cve_payload_list:
+                        # Prepend CVE payloads (they are more targeted)
+                        payloads[attack_type] = cve_payload_list[:5] + payloads[attack_type]
+                        logger.info(f"Added {len(cve_payload_list[:5])} CVE-based {attack_type} payloads")
             
             # Cache the generated payloads
             self.payload_cache[context_hash] = payloads

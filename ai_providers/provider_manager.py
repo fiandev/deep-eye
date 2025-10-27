@@ -60,6 +60,15 @@ class AIProviderManager:
                 logger.info("OLLAMA provider initialized")
             except Exception as e:
                 logger.warning(f"Failed to initialize OLLAMA provider: {e}")
+        
+        # Gemini
+        if ai_config.get('gemini', {}).get('enabled', False):
+            try:
+                from ai_providers.gemini_provider import GeminiProvider
+                self.providers['gemini'] = GeminiProvider(ai_config['gemini'])
+                logger.info("Gemini provider initialized")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Gemini provider: {e}")
     
     def set_provider(self, provider_name: str) -> bool:
         """

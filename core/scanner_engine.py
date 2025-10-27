@@ -17,6 +17,7 @@ from core.vulnerability_scanner import VulnerabilityScanner
 from core.ai_payload_generator import AIPayloadGenerator
 from core.plugin_manager import PluginManager
 from core.pentest_state_manager import PentestStateManager, PentestPhase
+from core.subdomain_scanner import SubdomainScanner
 from modules.reconnaissance.recon_engine import ReconEngine
 from modules.browser_automation.smart_tester import SmartBrowserTester
 from utils.http_client import HTTPClient
@@ -87,6 +88,9 @@ class ScannerEngine:
         
         # Browser automation
         self.browser_tester = SmartBrowserTester(config)
+        
+        # Subdomain scanner
+        self.subdomain_scanner = SubdomainScanner(self, config)
         
         # State tracking and management
         self.state_manager = PentestStateManager(target_url)
@@ -306,7 +310,8 @@ class ScannerEngine:
         self,
         enable_recon: bool = False,
         full_scan: bool = False,
-        quick_scan: bool = False
+        quick_scan: bool = False,
+        scan_subdomains: bool = False
     ) -> Dict:
         """
         Execute the complete scanning process.
@@ -315,6 +320,7 @@ class ScannerEngine:
             enable_recon: Enable reconnaissance phase
             full_scan: Enable all vulnerability tests
             quick_scan: Run only basic tests
+            scan_subdomains: Enable subdomain discovery and scanning (experimental)
             
         Returns:
             Dictionary containing scan results
@@ -331,7 +337,8 @@ class ScannerEngine:
                 'recon_enabled': enable_recon,
                 'scan_mode': 'full' if full_scan else 'quick' if quick_scan else 'standard',
                 'browser_enabled': self.config.get('advanced', {}).get('enable_javascript_rendering', False),
-                'screenshot_enabled': self.config.get('advanced', {}).get('screenshot_enabled', False)
+                'screenshot_enabled': self.config.get('advanced', {}).get('screenshot_enabled', False),
+                'subdomain_scanning': scan_subdomains
             }
         }
         
@@ -340,6 +347,22 @@ class ScannerEngine:
         if enable_recon:
             recon_data = self.run_reconnaissance()
             results['reconnaissance'] = recon_data
+        
+        # Phase 1.5: Subdomain Discovery & Scanning (experimental)
+        if scan_subdomains:
+            subdomain_results = self.subdomain_scanner.discover_and_scan(
+                self.target_url,
+                aggressive=self.config.get('experimental', {}).get('aggressive_subdomain_enum', True)
+            )
+            results['subdomain_scan'] = subdomain_results
+            
+            # Aggregate subdomain vulnerabilities into main results
+            for subdomain, sub_result in subdomain_results.get('scan_results', {}).items():
+                for vuln in sub_result.get('vulnerabilities', []):
+                    # Mark as subdomain vulnerability
+                    vuln['source'] = 'subdomain'
+                    vuln['subdomain'] = subdomain
+                    self.vulnerabilities.append(vuln)
         
         # Phase 2: Web Crawling
         discovered_urls = self.crawl_recursive()
