@@ -3,6 +3,14 @@
 
 # AI Provider Settings
 ai_providers:
+  openrouter:
+    enabled: true
+    api_key: "sk-your-openrouter-api-key-here"
+    model: "gpt-4o"
+    temperature: 0.7
+    max_tokens: 2000
+    timeout: 30
+
   openai:
     enabled: true
     api_key: "sk-your-openai-api-key-here"
@@ -10,7 +18,7 @@ ai_providers:
     temperature: 0.7
     max_tokens: 2000
     timeout: 30
-  
+
   claude:
     enabled: true
     api_key: "sk-ant-your-claude-api-key-here"
@@ -18,7 +26,7 @@ ai_providers:
     temperature: 0.7
     max_tokens: 2000
     timeout: 30
-  
+
   grok:
     enabled: true
     api_key: "xai-your-grok-api-key-here"
@@ -27,7 +35,7 @@ ai_providers:
     temperature: 0.7
     max_tokens: 2000
     timeout: 30
-  
+
   ollama:
     enabled: true
     base_url: "http://localhost:11434"
@@ -38,8 +46,8 @@ ai_providers:
 # Scanner Settings
 scanner:
   # Target configuration
-  target_url: ""  # Default target URL (can be overridden via CLI)
-  
+  target_url: "" # Default target URL (can be overridden via CLI)
+
   # Crawling settings
   default_threads: 5
   default_depth: 2
@@ -49,20 +57,20 @@ scanner:
   follow_redirects: true
   verify_ssl: true
   max_retries: 3
-  
+
   # Scan modes
-  enable_recon: false  # Enable reconnaissance phase
-  full_scan: false     # Enable all vulnerability tests
-  quick_scan: false    # Quick scan (basic tests only)
-  
+  enable_recon: false # Enable reconnaissance phase
+  full_scan: false # Enable all vulnerability tests
+  quick_scan: false # Quick scan (basic tests only)
+
   # AI Provider selection
-  ai_provider: "openai"  # Options: openai, claude, grok, ollama
-  
+  ai_provider: "openai" # Options: openai, claude, grok, ollama
+
   # Network settings
-  proxy: ""  # Proxy URL (e.g., http://127.0.0.1:8080)
-  custom_headers: {}  # Custom headers as key-value pairs
-  cookies: {}  # Cookies as key-value pairs
-  
+  proxy: "" # Proxy URL (e.g., http://127.0.0.1:8080)
+  custom_headers: {} # Custom headers as key-value pairs
+  cookies: {} # Cookies as key-value pairs
+
 # Vulnerability Scanner Settings
 vulnerability_scanner:
   enabled_checks:
@@ -100,15 +108,15 @@ vulnerability_scanner:
     - websocket
     - anomaly_detector
     # Note: osint_gathering has been moved to reconnaissance phase
-  
+
   # Payload generation
   payload_generation:
     use_ai: true
     context_aware: true
     cve_database: true
     custom_wordlists: true
-    use_payload_obfuscation: false  # Enable obfuscation for WAF bypass
-  
+    use_payload_obfuscation: false # Enable obfuscation for WAF bypass
+
   # Testing depth
   testing:
     thorough_mode: false
@@ -125,12 +133,12 @@ websocket:
   test_rate_limiting: true
   test_tls_verification: true
   connection_timeout: 10
-  max_message_size: 65536  # 64KB
+  max_message_size: 65536 # 64KB
 
 # Machine Learning Anomaly Detection
 ml_detection:
   enabled: true
-  baseline_samples: 100  # Number of samples for baseline training
+  baseline_samples: 100 # Number of samples for baseline training
   anomaly_threshold: 0.6
   features:
     - response_time
@@ -157,7 +165,7 @@ osint:
 
 # Payload Obfuscation
 payload_obfuscation:
-  enabled: false  # Enable for WAF bypass testing
+  enabled: false # Enable for WAF bypass testing
   techniques:
     - base64_encoding
     - url_encoding
@@ -206,7 +214,7 @@ file_upload:
   test_path_traversal: true
   test_file_type_bypass: true
   test_malicious_content: true
-  max_file_size_test: 10485760  # 10MB
+  max_file_size_test: 10485760 # 10MB
 
 # Collaborative Scanning
 collaboration:
@@ -214,7 +222,6 @@ collaboration:
   session_storage: "data/sessions"
   export_format: "json"
   auto_distribute_work: true
-
 
 # Reconnaissance Settings
 reconnaissance:
@@ -227,14 +234,14 @@ reconnaissance:
     - port_scanning
     - directory_bruteforce
     - email_harvesting
-    - osint_gathering  # OSINT is now part of reconnaissance
-  
+    - osint_gathering # OSINT is now part of reconnaissance
+
   subdomain_sources:
     - crt.sh
     - hackertarget
     - threatcrowd
     - virustotal
-  
+
   port_scan:
     common_ports: [80, 443, 8080, 8443, 3000, 3306, 5432, 6379, 27017]
     scan_timeout: 2
@@ -242,11 +249,11 @@ reconnaissance:
 # Report Settings
 reporting:
   # Output configuration
-  enabled: true  # Generate reports automatically
-  output_directory: "reports"  # Directory to save reports
-  output_filename: ""  # Custom filename (auto-generated if empty)
-  default_format: "html"  # Options: html, pdf, json
-  
+  enabled: true # Generate reports automatically
+  output_directory: "reports" # Directory to save reports
+  output_filename: "" # Custom filename (auto-generated if empty)
+  default_format: "html" # Options: html, pdf, json
+
   # Report sections
   include_sections:
     - executive_summary
@@ -255,7 +262,7 @@ reporting:
     - technical_details
     - reconnaissance_data
     - appendix
-  
+
   # Severity colors
   severity_colors:
     critical: "#8B0000"
@@ -263,7 +270,7 @@ reporting:
     medium: "#FFA500"
     low: "#FFD700"
     info: "#87CEEB"
-  
+
   # Branding
   branding:
     company_name: "Deep Eye Security"
@@ -272,10 +279,10 @@ reporting:
 
 # Logging Settings
 logging:
-  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR, CRITICAL
   log_to_file: true
   log_file: "logs/deep_eye.log"
-  max_file_size: 10485760  # 10MB
+  max_file_size: 10485760 # 10MB
   backup_count: 5
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
@@ -298,50 +305,51 @@ proxy:
   enabled: false
   http: ""
   https: ""
-  
+
 # Advanced Settings
 advanced:
   enable_javascript_rendering: false
   screenshot_enabled: false
   custom_dns_servers: []
-  exclude_extensions: [".jpg", ".jpeg", ".png", ".gif", ".css", ".js", ".woff", ".woff2", ".ttf"]
+  exclude_extensions:
+    [".jpg", ".jpeg", ".png", ".gif", ".css", ".js", ".woff", ".woff2", ".ttf"]
   exclude_patterns: []
-  max_response_size: 5242880  # 5MB
+  max_response_size: 5242880 # 5MB
 
 # Plugin System (v1.3.0)
 plugin_manager:
-  enabled: false  # Enable custom plugin system
-  plugin_directory: "plugins"  # Directory for custom vulnerability scanner plugins
-  auto_load: true  # Automatically load all plugins on startup
+  enabled: false # Enable custom plugin system
+  plugin_directory: "plugins" # Directory for custom vulnerability scanner plugins
+  auto_load: true # Automatically load all plugins on startup
 
 # Notification System (v1.3.0)
 notifications:
-  enabled: false  # Master switch for all notifications
-  notify_on_critical: true  # Send immediate alerts for critical vulnerabilities
-  
+  enabled: false # Master switch for all notifications
+  notify_on_critical: true # Send immediate alerts for critical vulnerabilities
+
   # Email Notifications
   email:
     enabled: false
     smtp_server: "smtp.gmail.com"
     smtp_port: 587
     username: "your-email@gmail.com"
-    password: "your-app-password"  # Use app-specific password
+    password: "your-app-password" # Use app-specific password
     from_address: "deep-eye@yourcompany.com"
     to_addresses:
       - "security-team@yourcompany.com"
       - "admin@yourcompany.com"
-  
+
   # Slack Notifications
   slack:
     enabled: false
     webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
-    channel: "#security-alerts"  # Optional: override webhook channel
-    username: "Deep Eye Scanner"  # Optional: custom bot name
-    icon_emoji: ":shield:"  # Optional: custom emoji
-  
+    channel: "#security-alerts" # Optional: override webhook channel
+    username: "Deep Eye Scanner" # Optional: custom bot name
+    icon_emoji: ":shield:" # Optional: custom emoji
+
   # Discord Notifications
   discord:
     enabled: false
     webhook_url: "https://discord.com/api/webhooks/YOUR/WEBHOOK/URL"
-    username: "Deep Eye Scanner"  # Optional: custom bot name
-    avatar_url: ""  # Optional: custom avatar URL
+    username: "Deep Eye Scanner" # Optional: custom bot name
+    avatar_url: "" # Optional: custom avatar URL
